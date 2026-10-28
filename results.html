@@ -278,9 +278,8 @@ function showNext() {
   const el = document.getElementById("next");
   if (!SCHED) { el.innerHTML = ""; return; }
   const left = (new Date(SCHED.next_check) - Date.now()) / 60000;
-  const txt = left > 0.5 ? `בעוד ${Math.round(left)} דק׳` : left > -3 ? "מתעדכן כעת…" : "העדכון מתעכב";
-  const down = SCHED.source === "unavailable" ? `<span class="dn">אתר ועדת הבחירות אינו זמין כרגע (בבדיקה של ${hm(SCHED.last_check)}); התחזית מבוססת על הקובץ האחרון שהתקבל.</span>` : "";
-  el.innerHTML = down + `<span><i class="pulse"></i>בדיקה הבאה של קובץ הוועדה: <b>${hm(SCHED.next_check)}</b> (${txt})</span>` +
+  const txt = left > 0.5 ? `בעוד ${Math.round(left)} דק׳` : "בודק כעת…";
+  el.innerHTML = `<span><i class="pulse"></i>בדיקה הבאה של קובץ הוועדה: <b>${hm(SCHED.next_check)}</b> (${txt})</span>` +
     `<span class="m">בדיקה אחרונה ${hm(SCHED.last_check)} · בדיקה כל ${Math.round(SCHED.every_s / 60)} דקות; התחזית מתעדכנת רק כשהוועדה מפרסמת קובץ חדש</span>`;
   if (left < -1.5 && !showNext.busy) { showNext.busy = true; load().finally(() => showNext.busy = false); }
 }
