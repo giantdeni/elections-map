@@ -151,7 +151,7 @@
     <h2>כל העדכונים</h2>
     <div id="hist"></div>
     <div class="legend"><span>מנדטים לכל גוש בכל עדכון (שעה ואחוז בעלי זכות הבחירה שנספרו) · לחיצה על נקודה מציגה את העדכון</span><span>תחזית יציבה = קווים שטוחים; מגמה עקבית = הנחה שגויה</span></div>
-    <details class="all"><summary>טבלת מנדטים לכל העדכונים</summary><div class="tbl" id="histTbl"></div></details>
+    <details class="all"><summary>טבלת מנדטים בספירה לכל העדכונים</summary><div class="tbl" id="histTbl"></div></details>
   </section>
 
 </main>
@@ -267,9 +267,10 @@ function drawHistory(cur) {
   }
   h.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="מנדטים לפי גוש בכל עדכון">${g}</svg>`;
   h.querySelectorAll(".pt").forEach(p => p.addEventListener("click", () => { const i = +p.dataset.i; document.getElementById("snap").value = i; render(i); }));
-  const ps = S[S.length - 1].parties.filter(p => S.some(e => (e.parties.find(q => q.letters === p.letters) || {}).seats));
+  // the table shows the seats by the votes counted in each update (not the projection, which is in the chart above)
+  const ps = S[S.length - 1].parties.filter(p => S.some(e => (e.parties.find(q => q.letters === p.letters) || {}).cseats));
   document.getElementById("histTbl").innerHTML = `<table><thead><tr><th>עדכון</th><th>נספר</th>${ps.map(p => `<th>${p.name}</th>`).join("")}<th>נתניהו</th><th>איזנקוט</th><th>ערבים</th></tr></thead><tbody>` +
-    S.map((e, i) => `<tr${i === cur ? ' style="font-weight:700"' : ""}><td>${when(e.published || e.received)}</td><td>${e.counted_pct}%</td>${ps.map(p => `<td>${(e.parties.find(q => q.letters === p.letters) || {}).seats || 0}</td>`).join("")}<td>${e.blocs.coalition}</td><td>${e.blocs.opposition}</td><td>${e.blocs.arab}</td></tr>`).join("") + "</tbody></table>";
+    S.map((e, i) => `<tr${i === cur ? ' style="font-weight:700"' : ""}><td>${when(e.published || e.received)}</td><td>${e.counted_pct}%</td>${ps.map(p => `<td>${(e.parties.find(q => q.letters === p.letters) || {}).cseats ?? "–"}</td>`).join("")}<td>${e.cblocs ? e.cblocs.coalition : "–"}</td><td>${e.cblocs ? e.cblocs.opposition : "–"}</td><td>${e.cblocs ? e.cblocs.arab : "–"}</td></tr>`).join("") + "</tbody></table>";
 }
 
 let SCHED = null;
@@ -285,7 +286,7 @@ function showNext() {
 }
 function load() {
   return Promise.all([
-    fetch("data/nowcast_v3.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()),
+    fetch("data/nowcast_v4.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()),
     fetch("data/schedule.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null),
   ]).then(([j, sc]) => {
     const sel = document.getElementById("snap");
