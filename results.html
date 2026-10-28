@@ -36,6 +36,10 @@
   .strip { position: relative; display: flex; height: 34px; border-radius: 6px; overflow: hidden; direction: rtl; }
   .strip span { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden;
                 border-inline-start: 1px solid var(--card); }
+  .srow { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .srow > span { width: 46px; flex: none; font-size: 12.5px; color: var(--muted); }
+  .srow .strip { flex: 1; min-width: 0; }
+  .strip.c0 { height: 24px; opacity: .72; }
   .strip .mid { position: absolute; top: -4px; bottom: -4px; right: calc(61 / 120 * 100%); width: 2px; background: var(--mark); }
   .blocs { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 14px; }
   .blocs b { font-variant-numeric: tabular-nums; }
@@ -62,12 +66,17 @@
   .tile { background: var(--card); border: 1px solid var(--line); border-top: 5px solid var(--c); border-radius: 10px; padding: 12px 14px; min-width: 0; }
   .tile h3 { margin: 0; font-size: 15px; }
   .tile .who { font-size: 11.5px; color: var(--muted); margin: 2px 0 8px; line-height: 1.35; }
+  .tile .pair { display: flex; gap: 22px; align-items: flex-end; }
+  .tile .pair > div { display: flex; flex-direction: column; gap: 2px; }
+  .tile .lbl { font-size: 11.5px; color: var(--muted); }
+  .tile .sub { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tile .s0 { font-size: 30px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: var(--muted); }
   .tile .s { font-size: 40px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: var(--c); }
   .tile .s small { font-size: 14px; font-weight: 500; color: var(--muted); margin-inline-start: 4px; }
   .tile .kv { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 13px; margin-top: 8px; font-variant-numeric: tabular-nums; }
   .tile .kv span { color: var(--muted); } .tile .kv b { color: var(--fg); font-weight: 600; }
   .tile .gap { font-size: 12.5px; margin-top: 6px; }
-  @media (max-width: 640px) { .tiles { grid-template-columns: 1fr; } .tile .s { font-size: 32px; } }
+  @media (max-width: 640px) { .tiles { grid-template-columns: 1fr; } .tile .s { font-size: 32px; } .tile .s0 { font-size: 26px; } }
   .legend { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 8px; }
   .edge { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
   .edge h3 { font-size: 14px; margin: 0 0 4px; }
@@ -109,15 +118,16 @@
   <section class="tiles" id="tiles"></section>
 
   <section class="card">
-    <h2>מנדטים צפויים (באדר-עופר, עם הסכמי עודפים)</h2>
-    <div class="strip" id="strip"><i class="mid" title="61"></i></div>
+    <h2>מנדטים (באדר-עופר, עם הסכמי עודפים)</h2>
+    <div class="srow"><span>בספירה</span><div class="strip c0" id="strip0"><i class="mid" title="61"></i></div></div>
+    <div class="srow"><span>צפי</span><div class="strip" id="strip"><i class="mid" title="61"></i></div></div>
     <div class="blocs" id="blocs"></div>
   </section>
 
   <section class="card">
     <h2>תחזית לפי רשימה</h2>
     <div class="tbl"><table>
-      <thead><tr><th>רשימה</th><th class="num hide-sm">נספר</th><th class="num">מנדטים בספירה</th><th class="num">תחזית</th><th class="hide-sm">טווח 90%</th><th class="num">מנדטים</th><th class="num">שינוי</th></tr></thead>
+      <thead><tr><th>רשימה</th><th class="num hide-sm">נספר</th><th class="num">מנדטים בספירה</th><th class="num">תחזית</th><th class="hide-sm">טווח 90%</th><th class="num">צפי מנדטים</th><th class="num">שינוי</th></tr></thead>
       <tbody id="rows"></tbody>
     </table></div>
     <div class="legend">
@@ -173,28 +183,32 @@ function render(i) {
   const sumPrev = k => prev ? J.blocs[k].reduce((a, l) => a + ((prev.parties.find(p => p.letters === l) || {}).seats || 0), 0) : null;
   document.getElementById("tiles").innerHTML = ["coalition", "opposition", "arab"].map(k => {
     const seats = e.blocs[k], pv = sumPrev(k), d = pv === null ? 0 : seats - pv;
-    const gap = k === "arab" ? "" : `<div class="gap">${seats >= 61 ? `<b class="up">רוב: ${seats - 60} מעל 60</b>` : `חסרים <b>${61 - seats}</b> לרוב של 61`}</div>`;
+    const gap = k === "arab" ? "" : `<div class="gap">${seats >= 61 ? `<b class="up">בצפי: רוב של ${seats - 60} מעל 60</b>` : `בצפי: חסרים <b>${61 - seats}</b> לרוב של 61`}</div>`;
     return `<div class="tile" style="--c:var(${BLOC_VAR[k]})"><h3>${BLOC_HE[k]}</h3><div class="who">${BLOC_SUB[k]}</div>
-      <div class="s">${seats}<small>מנדטים בתחזית</small></div>
-      <div class="kv"><span>תחזית קולות <b>${sum(k, p => p && p.proj).toFixed(1)}%</b></span><span>נספר <b>${sum(k, p => p && p.counted).toFixed(1)}%</b>${e.cblocs ? ` (${e.cblocs[k]} מנדטים)` : ""}</span>
-${pv === null ? "" : `<span>שינוי <b class="${d > 0 ? "up" : d < 0 ? "dn" : ""}">${d > 0 ? "+" : ""}${d}</b></span>`}</div>${gap}</div>`;
+      <div class="pair"><div><span class="lbl">מנדטים בספירה</span><b class="s0">${e.cblocs ? e.cblocs[k] : "–"}</b><span class="sub">${sum(k, p => p && p.counted).toFixed(1)}% מהקולות</span></div>
+        <div><span class="lbl">צפי מנדטים</span><b class="s">${seats}</b><span class="sub">${sum(k, p => p && p.proj).toFixed(1)}% מהקולות</span></div></div>
+      <div class="kv">${pv === null ? "" : `<span>שינוי בצפי <b class="${d > 0 ? "up" : d < 0 ? "dn" : ""}">${d > 0 ? "+" : ""}${d}</b></span>`}</div>${gap}</div>`;
   }).join("");
 
-  const ps = e.parties.filter(p => p.seats > 0);
   const order = ["coalition", "opposition", "arab"];
-  ps.sort((a, b) => order.indexOf(blocOf[a.letters]) - order.indexOf(blocOf[b.letters]) || b.seats - a.seats);
-  const strip = document.getElementById("strip");
-  strip.querySelectorAll("span").forEach(s => s.remove());
-  ps.forEach(p => {
-    const s = document.createElement("span");
-    s.style.width = (p.seats / 120 * 100) + "%";
-    s.style.background = col(p.letters);
-    s.title = `${p.name}: ${p.seats}`;
-    s.textContent = p.seats >= 5 ? p.seats : "";
-    strip.insertBefore(s, strip.querySelector(".mid"));
-  });
+  const fill = (id, key) => {
+    const strip = document.getElementById(id);
+    strip.querySelectorAll("span").forEach(s => s.remove());
+    e.parties.filter(p => p[key] > 0)
+      .sort((a, b) => order.indexOf(blocOf[a.letters]) - order.indexOf(blocOf[b.letters]) || b[key] - a[key])
+      .forEach(p => {
+        const s = document.createElement("span");
+        s.style.width = (p[key] / 120 * 100) + "%";
+        s.style.background = col(p.letters);
+        s.title = `${p.name}: ${p[key]}`;
+        s.textContent = p[key] >= 5 ? p[key] : "";
+        strip.insertBefore(s, strip.querySelector(".mid"));
+      });
+  };
+  fill("strip", "seats");
+  if (e.cblocs) fill("strip0", "cseats");
   document.getElementById("blocs").innerHTML = order.map(k =>
-    `<span><i class="dot" style="background:var(${BLOC_VAR[k]})"></i>${BLOC_HE[k]}: <b>${e.blocs[k]}</b></span>`).join("") +
+    `<span><i class="dot" style="background:var(${BLOC_VAR[k]})"></i>${BLOC_HE[k]}: <b>${e.cblocs ? e.cblocs[k] + " ← " : ""}${e.blocs[k]}</b></span>`).join("") +
     `<span style="color:var(--muted)">קו אדום = 61</span>`;
 
   const max = Math.max(...e.parties.map(p => p.hi), 25);
