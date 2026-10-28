@@ -49,6 +49,7 @@
   tr.below td { color: var(--faint); }
   .let { font-size: 11px; color: var(--muted); margin-inline-start: 4px; }
   .seats { font-weight: 700; font-size: 16px; }
+  td.cnt { font-weight: 600; color: var(--muted); }
   .rng { font-size: 11.5px; color: var(--muted); }
   .bar { position: relative; width: 220px; height: 14px; }
   .bar .r { position: absolute; top: 3px; height: 8px; background: var(--range); border-radius: 2px; }
@@ -84,7 +85,7 @@
   details.all table { margin-top: 6px; }
   details.all td, details.all th { padding: 4px 6px; text-align: center; }
   details.all td:first-child, details.all th:first-child { text-align: start; }
-  @media (max-width: 560px) { .bar { width: 90px; } .hide-sm { display: none; } .status .big { font-size: 21px; } }
+  @media (max-width: 560px) { td, th { padding-inline: 4px; } th { white-space: normal; } .bar { width: 90px; } .hide-sm { display: none; } .status .big { font-size: 21px; } }
 </style>
 </head>
 <body>
@@ -116,7 +117,7 @@
   <section class="card">
     <h2>תחזית לפי רשימה</h2>
     <div class="tbl"><table>
-      <thead><tr><th>רשימה</th><th class="num">נספר</th><th class="num">תחזית</th><th class="hide-sm">טווח 90%</th><th class="num">מנדטים</th><th class="num">שינוי</th></tr></thead>
+      <thead><tr><th>רשימה</th><th class="num hide-sm">נספר</th><th class="num">מנדטים בספירה</th><th class="num">תחזית</th><th class="hide-sm">טווח 90%</th><th class="num">מנדטים</th><th class="num">שינוי</th></tr></thead>
       <tbody id="rows"></tbody>
     </table></div>
     <div class="legend">
@@ -174,8 +175,8 @@ function render(i) {
     const seats = e.blocs[k], pv = sumPrev(k), d = pv === null ? 0 : seats - pv;
     const gap = k === "arab" ? "" : `<div class="gap">${seats >= 61 ? `<b class="up">רוב: ${seats - 60} מעל 60</b>` : `חסרים <b>${61 - seats}</b> לרוב של 61`}</div>`;
     return `<div class="tile" style="--c:var(${BLOC_VAR[k]})"><h3>${BLOC_HE[k]}</h3><div class="who">${BLOC_SUB[k]}</div>
-      <div class="s">${seats}<small>מנדטים</small></div>
-      <div class="kv"><span>תחזית קולות <b>${sum(k, p => p && p.proj).toFixed(1)}%</b></span><span>נספר <b>${sum(k, p => p && p.counted).toFixed(1)}%</b></span>
+      <div class="s">${seats}<small>מנדטים בתחזית</small></div>
+      <div class="kv"><span>תחזית קולות <b>${sum(k, p => p && p.proj).toFixed(1)}%</b></span><span>נספר <b>${sum(k, p => p && p.counted).toFixed(1)}%</b>${e.cblocs ? ` (${e.cblocs[k]} מנדטים)` : ""}</span>
 ${pv === null ? "" : `<span>שינוי <b class="${d > 0 ? "up" : d < 0 ? "dn" : ""}">${d > 0 ? "+" : ""}${d}</b></span>`}</div>${gap}</div>`;
   }).join("");
 
@@ -204,7 +205,8 @@ ${pv === null ? "" : `<span>שינוי <b class="${d > 0 ? "up" : d < 0 ? "dn" :
     const dl = !prev || d === 0 ? `<span class="rng">–</span>` : `<span class="delta ${d > 0 ? "up" : "dn"}">${d > 0 ? "+" : ""}${d}</span>`;
     return `<tr class="${p.seats ? "" : "below"}">
       <td>${p.name}<span class="let">${p.letters === "other" ? "" : p.letters}</span></td>
-      <td class="num">${p.counted.toFixed(1)}%</td>
+      <td class="num hide-sm">${p.counted.toFixed(1)}%</td>
+      <td class="num cnt">${p.cseats ?? "–"}</td>
       <td class="num"><b>${p.proj.toFixed(1)}%</b></td>
       <td class="hide-sm"><div class="bar">
         <i class="r" style="right:${x(p.lo)}%;width:${Math.max(x(p.hi) - x(p.lo), .8)}%"></i>
