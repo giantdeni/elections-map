@@ -106,7 +106,7 @@
   <section class="card">
     <div class="status">
       <div><span class="lbl">עדכון</span><span class="big" id="when">–</span></div>
-      <div><span class="lbl">בעלי זכות בחירה בקלפיות שנספרו</span><span class="big" id="pct">–</span></div>
+      <div><span class="lbl">מהקולות נספרו (כולל המעטפות הכפולות)</span><span class="big" id="pct">–</span></div>
       <div><span class="lbl">קולות כשרים שנספרו</span><span class="big" id="counted">–</span></div>
       <label class="snap">עדכון: <select id="snap"></select></label>
     </div>
@@ -150,7 +150,7 @@
   <section class="card">
     <h2>כל העדכונים</h2>
     <div id="hist"></div>
-    <div class="legend"><span>מנדטים לכל גוש בכל עדכון (שעה ואחוז בעלי זכות הבחירה שנספרו) · לחיצה על נקודה מציגה את העדכון</span><span>תחזית יציבה = קווים שטוחים; מגמה עקבית = הנחה שגויה</span></div>
+    <div class="legend"><span>מנדטים לכל גוש בכל עדכון (שעה ואחוז הקולות שנספרו) · לחיצה על נקודה מציגה את העדכון</span><span>תחזית יציבה = קווים שטוחים; מגמה עקבית = הנחה שגויה</span></div>
     <details class="all"><summary>טבלת מנדטים בספירה לכל העדכונים</summary><div class="tbl" id="histTbl"></div></details>
   </section>
 
@@ -169,14 +169,17 @@ function when(iso) {
   return d.toLocaleString("he-IL", { timeZone: "Asia/Jerusalem", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
+// share of all votes counted: valid votes counted / projected valid votes, the double envelopes included
+const vpct = e => Math.round(e.counted / e.projected_total * 1000) / 10;
+
 function render(i) {
   const e = J.snapshots[i], prev = J.snapshots[i - 1];
   document.getElementById("when").textContent = when(e.published || e.received);
   document.getElementById("counted").textContent = fmt(e.counted);
-  document.getElementById("pct").textContent = e.counted_pct.toFixed(1) + "%";
-  document.getElementById("pct").title = `${fmt(e.counted_elig)} מתוך ${fmt(e.total_elig)}`;
-  document.getElementById("prog").style.width = e.counted_pct + "%";
-  document.getElementById("sub").textContent = `${fmt(e.counted_elig)} מתוך ${fmt(e.total_elig)} בעלי זכות בחירה (נתון ועדת הבחירות) · ${fmt(e.stations)} קלפיות · צפי לסך הקולות הכשרים: ${fmt(e.projected_total)}, כולל המעטפות הכפולות`;
+  document.getElementById("pct").textContent = vpct(e).toFixed(1) + "%";
+  document.getElementById("pct").title = `${fmt(e.counted)} מתוך צפי של ${fmt(e.projected_total)} קולות כשרים`;
+  document.getElementById("prog").style.width = vpct(e) + "%";
+  document.getElementById("sub").textContent = `קלפיות רגילות: ${e.counted_pct.toFixed(1)}% מבעלי זכות הבחירה (${fmt(e.counted_elig)} מתוך ${fmt(e.total_elig)}, נתון ועדת הבחירות) · ${fmt(e.stations)} קלפיות · צפי לסך הקולות הכשרים: ${fmt(e.projected_total)}, כולל המעטפות הכפולות`;
   drawHistory(i);
 
   const sum = (k, f) => J.blocs[k].reduce((a, l) => a + (f(e.parties.find(p => p.letters === l)) || 0), 0);
@@ -256,13 +259,13 @@ function drawHistory(cur) {
   const n = S.length, X = i => n === 1 ? W / 2 : W - R - i / (n - 1) * (W - L - R), Y = v => T + (ymax - v) / (ymax - ymin) * (H - T - B);
   let g = "";
   for (let v = 20; v <= 50; v += 10) g += `<line class="grid" x1="${L - 30}" x2="${W - R + 20}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${W - R + 26}" y="${Y(v) + 4}" text-anchor="start">${v}</text>`;
-  S.forEach((e, i) => g += `<text x="${X(i)}" y="${H - 18}" text-anchor="middle">${when(e.published || e.received).split(" ").pop()}</text><text x="${X(i)}" y="${H - 4}" text-anchor="middle">${e.counted_pct}%</text>`);
+  S.forEach((e, i) => g += `<text x="${X(i)}" y="${H - 18}" text-anchor="middle">${when(e.published || e.received).split(" ").pop()}</text><text x="${X(i)}" y="${H - 4}" text-anchor="middle">${vpct(e)}%</text>`);
   g += `<line class="m61" x1="${L - 30}" x2="${W - R + 20}" y1="${Y(61)}" y2="${Y(61)}"/><text x="${W - R + 26}" y="${Y(61) + 4}" fill="var(--mark)" style="fill:var(--mark)">61</text>`;
   g += `<line class="cur" x1="${X(cur)}" x2="${X(cur)}" y1="${T}" y2="${H - B}"/>`;
   for (const k of ["coalition", "opposition", "arab"]) {
     const c = `var(${BLOC_VAR[k]})`;
     g += `<polyline fill="none" stroke="${c}" stroke-width="2.2" points="${S.map((e, i) => X(i) + "," + Y(e.blocs[k])).join(" ")}"/>`;
-    S.forEach((e, i) => g += `<circle class="pt" data-i="${i}" cx="${X(i)}" cy="${Y(e.blocs[k])}" r="${i === cur ? 5.5 : 4}" fill="${c}" stroke="var(--card)" stroke-width="1.5"><title>${BLOC_HE[k]}: ${e.blocs[k]} · ${when(e.published || e.received)} · ${e.counted_pct}%</title></circle>`);
+    S.forEach((e, i) => g += `<circle class="pt" data-i="${i}" cx="${X(i)}" cy="${Y(e.blocs[k])}" r="${i === cur ? 5.5 : 4}" fill="${c}" stroke="var(--card)" stroke-width="1.5"><title>${BLOC_HE[k]}: ${e.blocs[k]} · ${when(e.published || e.received)} · ${vpct(e)}%</title></circle>`);
     g += `<text x="${X(n - 1) - 9}" y="${Y(S[n - 1].blocs[k]) + 4}" text-anchor="end" style="fill:${c};font-weight:700;font-size:13px">${S[n - 1].blocs[k]}</text>`;
   }
   h.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="מנדטים לפי גוש בכל עדכון">${g}</svg>`;
@@ -270,7 +273,7 @@ function drawHistory(cur) {
   // the table shows the seats by the votes counted in each update (not the projection, which is in the chart above)
   const ps = S[S.length - 1].parties.filter(p => S.some(e => (e.parties.find(q => q.letters === p.letters) || {}).cseats));
   document.getElementById("histTbl").innerHTML = `<table><thead><tr><th>עדכון</th><th>נספר</th>${ps.map(p => `<th>${p.name}</th>`).join("")}<th>נתניהו</th><th>איזנקוט</th><th>ערבים</th></tr></thead><tbody>` +
-    S.map((e, i) => `<tr${i === cur ? ' style="font-weight:700"' : ""}><td>${when(e.published || e.received)}</td><td>${e.counted_pct}%</td>${ps.map(p => `<td>${(e.parties.find(q => q.letters === p.letters) || {}).cseats ?? "–"}</td>`).join("")}<td>${e.cblocs ? e.cblocs.coalition : "–"}</td><td>${e.cblocs ? e.cblocs.opposition : "–"}</td><td>${e.cblocs ? e.cblocs.arab : "–"}</td></tr>`).join("") + "</tbody></table>";
+    S.map((e, i) => `<tr${i === cur ? ' style="font-weight:700"' : ""}><td>${when(e.published || e.received)}</td><td>${vpct(e)}%</td>${ps.map(p => `<td>${(e.parties.find(q => q.letters === p.letters) || {}).cseats ?? "–"}</td>`).join("")}<td>${e.cblocs ? e.cblocs.coalition : "–"}</td><td>${e.cblocs ? e.cblocs.opposition : "–"}</td><td>${e.cblocs ? e.cblocs.arab : "–"}</td></tr>`).join("") + "</tbody></table>";
 }
 
 let SCHED = null;
@@ -303,7 +306,7 @@ function setup(j, show) {
   J = j;
   for (const [k, v] of Object.entries(j.blocs)) v.forEach(p => blocOf[p] = k);
   const sel = document.getElementById("snap");
-  sel.innerHTML = j.snapshots.map((e, i) => `<option value="${i}">${when(e.published || e.received)} · ${e.counted_pct.toFixed(0)}%</option>`).join("");
+  sel.innerHTML = j.snapshots.map((e, i) => `<option value="${i}">${when(e.published || e.received)} · ${vpct(e).toFixed(0)}%</option>`).join("");
   sel.value = show;
   sel.onchange = () => render(+sel.value);
   render(show);
