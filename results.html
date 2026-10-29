@@ -183,14 +183,14 @@ function render(i) {
   drawHistory(i);
 
   const sum = (k, f) => J.blocs[k].reduce((a, l) => a + (f(e.parties.find(p => p.letters === l)) || 0), 0);
-  const sumPrev = k => prev ? J.blocs[k].reduce((a, l) => a + ((prev.parties.find(p => p.letters === l) || {}).seats || 0), 0) : null;
   document.getElementById("tiles").innerHTML = ["coalition", "opposition", "arab"].map(k => {
-    const seats = e.blocs[k], pv = sumPrev(k), d = pv === null ? 0 : seats - pv;
+    // projected seats minus the seats by the votes counted so far
+    const seats = e.blocs[k], pv = e.cblocs ? e.cblocs[k] : null, d = pv === null ? 0 : seats - pv;
     const gap = k === "arab" ? "" : `<div class="gap">${seats >= 61 ? `<b class="up">בצפי: רוב של ${seats - 60} מעל 60</b>` : `בצפי: חסרים <b>${61 - seats}</b> לרוב של 61`}</div>`;
     return `<div class="tile" style="--c:var(${BLOC_VAR[k]})"><h3>${BLOC_HE[k]}</h3><div class="who">${BLOC_SUB[k]}</div>
       <div class="pair"><div><span class="lbl">מנדטים בספירה</span><b class="s0">${e.cblocs ? e.cblocs[k] : "–"}</b><span class="sub">${sum(k, p => p && p.counted).toFixed(1)}% מהקולות</span></div>
         <div><span class="lbl">צפי מנדטים</span><b class="s">${seats}</b><span class="sub">${sum(k, p => p && p.proj).toFixed(1)}% מהקולות</span></div></div>
-      <div class="kv">${pv === null ? "" : `<span>שינוי בצפי <b class="${d > 0 ? "up" : d < 0 ? "dn" : ""}">${d > 0 ? "+" : ""}${d}</b></span>`}</div>${gap}</div>`;
+      <div class="kv">${pv === null ? "" : `<span>צפי לעומת הספירה <b class="${d > 0 ? "up" : d < 0 ? "dn" : ""}">${d > 0 ? "+" : ""}${d}</b></span>`}</div>${gap}</div>`;
   }).join("");
 
   const order = ["coalition", "opposition", "arab"];
