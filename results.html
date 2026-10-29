@@ -289,7 +289,7 @@ function showNext() {
 }
 function load() {
   return Promise.all([
-    fetch("data/nowcast_v4.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()),
+    fetch("data/nowcast_v5.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()),
     fetch("data/schedule.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null),
   ]).then(([j, sc]) => {
     const sel = document.getElementById("snap");
