@@ -134,7 +134,7 @@
       <span><i class="dot" style="background:var(--range)"></i>טווח 90% (דגימה מחדש של יישובים)</span>
       <span><i class="dot" style="background:var(--faint);width:2px"></i>אחוז בספירה עד כה</span>
       <span><i class="dot" style="background:var(--mark);width:1px"></i>אחוז החסימה 3.25%</span>
-      <span>"שינוי" = מנדטים לעומת העדכון הקודם</span>
+      <span>"שינוי" = צפי המנדטים לעומת המנדטים בספירה כעת</span>
     </div>
   </section>
 
@@ -216,10 +216,10 @@ function render(i) {
 
   const max = Math.max(...e.parties.map(p => p.hi), 25);
   const x = v => (v / max * 100);
-  const pm = prev ? Object.fromEntries(prev.parties.map(p => [p.letters, p.seats])) : {};
   document.getElementById("rows").innerHTML = e.parties.filter(p => p.proj >= 0.3 || p.counted >= 0.3).map(p => {
-    const d = prev ? p.seats - (pm[p.letters] || 0) : 0;
-    const dl = !prev || d === 0 ? `<span class="rng">–</span>` : `<span class="delta ${d > 0 ? "up" : "dn"}">${d > 0 ? "+" : ""}${d}</span>`;
+    // projected seats minus the seats by the votes counted so far
+    const d = p.cseats == null ? 0 : p.seats - p.cseats;
+    const dl = d === 0 ? `<span class="rng">–</span>` : `<span class="delta ${d > 0 ? "up" : "dn"}">${d > 0 ? "+" : ""}${d}</span>`;
     return `<tr class="${p.seats ? "" : "below"}">
       <td>${p.name}<span class="let">${p.letters === "other" ? "" : p.letters}</span></td>
       <td class="num hide-sm">${p.counted.toFixed(1)}%</td>
